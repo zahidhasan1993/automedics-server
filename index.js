@@ -31,7 +31,9 @@ async function run() {
     await client.connect();
     const database = client.db("autoMedics");
     const serviceCollections = database.collection("services");
+    const orderCollections = database.collection("orders");
 
+    //service database
     app.get('/services', async (req,res) => {
         const cursor = serviceCollections.find();
         const result = await cursor.toArray();
@@ -47,6 +49,29 @@ async function run() {
         res.send(service);
     })
     
+    //order database
+
+    app.get('/orders', async (req,res) => {
+
+      let query = {};
+
+      if (req.query?.email) {
+        query = {email : req.query.email}
+      }
+
+      const orders = orderCollections.find(query);
+      // console.log(orders);
+      const result = await orders.toArray();
+      res.send(result)
+    })
+
+    app.post('/orders', async (req,res) => {
+      const order = req.body;
+      console.log(order);
+      const result = await orderCollections.insertOne(order);
+
+      res.send(result);
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
