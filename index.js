@@ -73,6 +73,23 @@ async function run() {
       res.send(result);
     })
 
+    //update confirmed order
+    app.patch('/orders/:id', async (req,res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: 'Confirmed'
+        },
+      };
+
+      const result = await orderCollections.updateOne(filter,updateDoc);
+
+      console.log(id);
+      res.send(result)
+
+    })
+
     // Delete single order 
     app.delete('/orders/:id', async (req,res) => {
         const id = req.params.id;
