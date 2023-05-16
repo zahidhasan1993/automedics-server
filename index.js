@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -33,73 +34,80 @@ async function run() {
     const serviceCollections = database.collection("services");
     const orderCollections = database.collection("orders");
 
-    //service database
-    app.get('/services', async (req,res) => {
-        const cursor = serviceCollections.find();
-        const result = await cursor.toArray();
+    //jwt
 
-        res.send(result);
-
+    app.post("/token", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1h',
+      });
+      console.log(token);
+      res.send({ token });
     });
-    app.get('/services/:id', async (req,res) => {
-        const id = req.params.id;
-        const query = {_id : new ObjectId(id)}
-        const service = await serviceCollections.findOne(query);
 
-        res.send(service);
-    })
-    
+    //service database
+    app.get("/services", async (req, res) => {
+      const cursor = serviceCollections.find();
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
+    app.get("/services/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const service = await serviceCollections.findOne(query);
+
+      res.send(service);
+    });
+
     //order database
 
-    app.get('/orders', async (req,res) => {
-
+    app.get("/orders", async (req, res) => {
       let query = {};
 
       if (req.query?.email) {
-        query = {email : req.query.email}
+        query = { email: req.query.email };
       }
 
       const orders = orderCollections.find(query);
       // console.log(orders);
       const result = await orders.toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
 
-    app.post('/orders', async (req,res) => {
+    app.post("/orders", async (req, res) => {
       const order = req.body;
       console.log(order);
       const result = await orderCollections.insertOne(order);
 
       res.send(result);
-    })
+    });
 
     //update confirmed order
-    app.patch('/orders/:id', async (req,res) => {
+    app.patch("/orders/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          status: 'Confirmed'
+          status: "Confirmed",
         },
       };
 
-      const result = await orderCollections.updateOne(filter,updateDoc);
+      const result = await orderCollections.updateOne(filter, updateDoc);
 
       console.log(id);
-      res.send(result)
+      res.send(result);
+    });
 
-    })
+    // Delete single order
+    app.delete("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
 
-    // Delete single order 
-    app.delete('/orders/:id', async (req,res) => {
-        const id = req.params.id;
-        const query = { _id : new ObjectId(id) };
+      const result = await orderCollections.deleteOne(query);
 
-        const result = await orderCollections.deleteOne(query);
-
-        res.send(result)
-
-    })
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
