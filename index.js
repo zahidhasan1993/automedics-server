@@ -61,9 +61,9 @@ async function run() {
     app.post("/token", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '1h',
+        expiresIn: '1.5hr',
       });
-      console.log(token);
+      // console.log(token);
       res.send({ token });
     });
 
@@ -86,10 +86,15 @@ async function run() {
 
     app.get("/orders", verifyJWT , async (req, res) => {
       let query = {};
-
+      const decoded = req.decoded;
+      // console.log('comeback after authorized', req.query.email);
       // console.log(req.headers.authorization);
       if (req.query?.email) {
         query = { email: req.query.email };
+      }
+      if (req.query.email !== decoded.email) {
+        return res.status(402).send({error: true, message: 'Unauthorized Access'})
+        
       }
 
       const orders = orderCollections.find(query);
