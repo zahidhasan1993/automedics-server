@@ -26,6 +26,28 @@ const client = new MongoClient(uri, {
   },
 });
 
+const verifyJWT = (req,res,next) => {
+  // console.log('jwt theke asche',req.headers.authorization);
+
+  const authorization = req.headers.authorization;
+
+  if(!authorization){
+    return res.status(401).send({error : true, message: 'User now founded, token false'})
+  }
+
+  const token = authorization.split(' ')[1];
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err,decoded) => {
+    if (err) {
+      res.status(403).send({error : true, message: 'unauthorized access'})
+    }
+    req.decoded = decoded;
+    next();
+  })
+  // console.log('token theke paise',token);
+
+}
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -62,9 +84,10 @@ async function run() {
 
     //order database
 
-    app.get("/orders", async (req, res) => {
+    app.get("/orders", verifyJWT , async (req, res) => {
       let query = {};
 
+      // console.log(req.headers.authorization);
       if (req.query?.email) {
         query = { email: req.query.email };
       }
