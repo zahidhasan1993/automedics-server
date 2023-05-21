@@ -10,8 +10,6 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-//zgsrQlFubgRzSUd7
-//automedics
 
 //connections/routes
 
@@ -51,7 +49,7 @@ const verifyJWT = (req,res,next) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const database = client.db("autoMedics");
     const serviceCollections = database.collection("services");
     const orderCollections = database.collection("orders");
